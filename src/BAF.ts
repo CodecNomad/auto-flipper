@@ -1,8 +1,7 @@
-import { ScoreBoard } from 'mineflayer'
 import { createBot } from 'mineflayer'
 import { createFastWindowClicker } from './fastWindowClick'
 import { addLoggerToClientWriteFunction, initLogger, log, printMcChatToConsole } from './logger'
-import { clickWindow, isCoflChatMessage, removeMinecraftColorCodes, sleep } from './utils'
+import { clickWindow, isCoflChatMessage, sleep } from './utils'
 import { onWebsocketCreateAuction } from './sellHandler'
 import { tradePerson } from './tradeHandler'
 import { swapProfile } from './swapProfileHandler'
@@ -21,11 +20,21 @@ initLogger()
 const version = '1.5.0-af'
 let wss: WebSocket
 let ingameName = getConfigProperty('INGAME_NAME')
+let windowSkip = getConfigProperty('USE_WINDOW_SKIPS')
 
 if (!ingameName) {
     ingameName = prompt('Enter your ingame name: ')
     updatePersistentConfigProperty('INGAME_NAME', ingameName)
 }
+
+if (windowSkip) {
+    windowSkip = prompt('Window skips are detected. Would you like to disable them? (Type "illgetbanned" to use them, or press enter to proceed)');
+
+    if (windowSkip.toLowerCase() !== 'illgetbanned') {
+        updatePersistentConfigProperty('USE_WINDOW_SKIPS', false);
+    }
+}
+
 
 const bot: MyBot = createBot({
     username: ingameName,
@@ -73,7 +82,7 @@ function connectWebsocket() {
         sendWebhookInitialized()
     }
     wss.onmessage = onWebsocketMessage
-    wss.onclose = function (e) {
+    wss.onclose = function (_) {
         log('Connection closed. Reconnecting... ', 'warn')
         setTimeout(function () {
             connectWebsocket()
